@@ -20,7 +20,6 @@ body{
   background-color: var(--bg);
   font-size: 16pt;
   color: var(--text-color);
-  /* TODO Add font-family from google */
   font-family: 'Coda Caption', Arial, Helvetica, sans-serif;
 }
 
