@@ -14,43 +14,15 @@ loadContacts()
 function addContact(event) {
   event.preventDefault()
   let form = event.target
-  let newContact = {}
-  let newContactPhones = {}
-  let newContactName = form.name.value
-  let newContactPhone = form.phone.value
-  let newEmergency = document.getElementById("emergency-checkbox").checked
-
-  newContact = contacts.find(contactName => contactName.name == newContactName)
-  newContactPhones = contacts.find(contactPhone => contactPhone.phone == newContactPhone)
-  document.getElementById("phone-error").innerText = "" //reset phone error text
-  document.getElementById("name-error").innerText = "" //reset name error text 
-
-
-  if (!newContact && !newContactPhones) { //If no contact is the same as current, and no phone number is same as current, add to contacts array
-    newContact = { name: newContactName, phone: newContactPhone, emergency: newEmergency }
-    contacts.push(newContact)
-    console.log("Added " + newContactName + " " + newContactPhone + " " + newEmergency)
-    saveContacts()
-    form.name.value = ""
-    form.phone.value = ""
-
-    //Clears error messages
-    document.getElementById("phone-error").innerText = ""
-    document.getElementById("name-error").innerText = ""
-
-    //unchecks checkbox
-    document.getElementById("emergency-checkbox").checked = false
-
-  } else if (!newContact && newContactPhones) { //if phone number already exists, prompt error
-    document.getElementById("phone-error").innerText = "Phone number already in use!"
-  } else if (newContact && !newContactPhones) { //if name already exists, prompt error
-    document.getElementById("name-error").innerText = "Name already in use!"
-  } else { //if both name and number exist, prompt error
-    document.getElementById("phone-error").innerText = "Phone number already in use!"
-    document.getElementById("name-error").innerText = "Name already in use!"
+  let newContact = {
+    id: generateId(),
+    name: form.name.value,
+    phone: form.phone.value,
+    emergencyCheckbox: form.emergencyCheckbox.checked
   }
-
-  drawContacts()
+  contacts.push(newContact)
+  saveContacts()
+  form.reset()
 }
 
 /**
@@ -59,6 +31,7 @@ function addContact(event) {
  */
 function saveContacts() {
   window.localStorage.setItem("contacts", JSON.stringify(contacts))
+  drawContacts()
 }
 
 /**
@@ -80,33 +53,18 @@ function loadContacts() {
  */
 function drawContacts() {
   let template = ""
-  contacts.forEach(contact => {
-    if (contact.emergency) { //if contact is emergency, give special look
-      template += `
-      <div class="card mt-1 mb-1 emergency-contact">
+  contacts.forEach(contact => { //if contact is emergency, give special look
+    template += `
+      <div class="card mt-1 mb-1 ${contact.emergencyCheckbox ? 'emergency-contact' : ''}">
         <h3 class="mt-1 mb-1">${contact.name}</h3>
         <div class="d-flex space-between">
           <p>
             <i class="fa fa-fw fa-phone"></i>
             <span>${contact.phone}</span>
           </p>
-          <i class="action fa fa-trash text-danger" onclick="removeContact('${contact.name}')"></i>
+          <i class="action fa fa-trash text-danger" onclick="removeContact('${contact.id}')"></i>
         </div>
       </div>`
-    } else {
-      template += `
-    <div class="card mt-1 mb-1">
-        <h3 class="mt-1 mb-1">${contact.name}</h3>
-        <div class="d-flex space-between">
-          <p>
-            <i class="fa fa-fw fa-phone"></i>
-            <span>${contact.phone}</span>
-          </p>
-          <i class="action fa fa-trash text-danger" onclick="removeContact('${contact.name}')"></i>
-        </div>
-      </div>`
-    }
-
   })
 
   document.getElementById("contact-list").innerHTML = template
@@ -122,11 +80,13 @@ function drawContacts() {
  * @param {string} contactId 
  */
 function removeContact(contactId) {
-  const index = contacts.findIndex(selectedContact => selectedContact.name === contactId)
-  var removeContact = contacts.splice(index, 1)
+  const index = contacts.findIndex(selectedContact => selectedContact.id === contactId)
 
+  if (index == -1) {
+    throw new Error("Invalid Contact Id")
+  }
+  contacts.splice(index, 1)
   saveContacts()
-  drawContacts()
 }
 
 /**
